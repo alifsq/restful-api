@@ -11,17 +11,19 @@ class UserResource extends JsonResource
      * Transform the resource into an array.
      *
      * @return array<string, mixed>
+     * @extends JsonResource<\App\Models\User>
      *
      */
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->resource->id,
-            'username' => $this->resource->username,
-            'name'=>$this->resource->name,
+            'id' => $this->id,
+            'username' => $this->username,
+            'name' => $this->name,
 
             // token displayed if correct
-            'token'=>$this->whenNotNull($this->resource->token),
+            'token' => $this->whenNotNull($this->token)
+
         ];
     }
 }

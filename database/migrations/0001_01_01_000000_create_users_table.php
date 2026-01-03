@@ -14,8 +14,8 @@ return new class extends Migration {
             $table->id();
             $table->string("username", 100)->unique("users_username_password");
             $table->string("password", 100);
-            $table->string('name',100);
-            $table->string("token", 100)->unique("users_tokens_unique");
+            $table->string('name', 100);
+            $table->string("token", 100)->nullable()->unique("users_token_unique");
             $table->timestamps();
 
         });
