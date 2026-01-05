@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\Contact;
+use Database\Seeders\ContactSeeder;
 use Database\Seeders\SearchSeeder;
 use Database\Seeders\UserSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -55,4 +57,69 @@ class ContactTest extends TestCase
 
         Log::info(json_encode($response, JSON_PRETTY_PRINT));
     }
+
+    public function testGetUserSuccess()
+    {
+        $this->seed([UserSeeder::class, ContactSeeder::class]);
+        $contact = Contact::query()->limit(1)->first();
+
+        $this->get('/api/contacts/' . $contact->id, [
+            'Authorization' => 'test'
+        ])->assertStatus(200);
+    }
+
+    public function testUpdateContact()
+    {
+        $this->seed([UserSeeder::class, ContactSeeder::class]);
+
+        $contact = Contact::query()->limit(1)->first();
+
+        $this->put('/api/contacts/' . $contact->id, [
+            'first_name' => 'test2',
+            'last_name' => 'test2',
+            'email' => 'test2@mail.com',
+            'phone' => '1111112',
+        ], [
+            'Authorization' => 'test'
+        ])
+            ->assertStatus(200)
+            ->assertJson([
+                'data' => [
+                    'first_name' => 'test2',
+                    'last_name' => 'test2',
+                    'email' => 'test2@mail.com',
+                    'phone' => '1111112',
+                ]
+            ]);
+    }
+
+    public function testDeleteContactSuccess()
+    {
+        $this->seed([UserSeeder::class, ContactSeeder::class]);
+        $contact = Contact::query()->limit(1)->first();
+
+        $this->delete('/api/contacts/' . $contact->id, [], [
+            'Authorization' => 'test'
+        ])
+        ->assertStatus(200)->assertJson([
+            'data'=>true
+        ]);
+    }
+
+    public function testDeleteNotFound(){
+        $this->seed([UserSeeder::class,ContactSeeder::class]);
+        $contact = Contact::query()->limit(1)->first();
+        $this->delete('/api/contacts/'.$contact->id+1,[],[
+            'Authorization'=>'test'
+        ])->assertStatus(404)->assertJson(
+            [
+                'errors'=>[
+                    'message'=>[
+                        'Contact Not Found'
+                    ]
+                ]
+            ]
+        );
+    }
+
 }
