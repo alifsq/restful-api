@@ -2,11 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Models\Address;
 use App\Models\Contact;
+use Database\Seeders\AddressSeeder;
 use Database\Seeders\ContactSeeder;
 use Database\Seeders\UserSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use PhpParser\Builder\Class_;
 use Tests\TestCase;
 
 class AddressTest extends TestCase
@@ -21,23 +24,96 @@ class AddressTest extends TestCase
                 'street' => 'test',
                 'city' => 'test',
                 'province' => 'test',
-                'country'=>'test',
+                'country' => 'test',
                 'postal_code' => '12345'
             ],
             [
                 'Authorization' => 'test'
             ]
         )
-        ->assertStatus(201)
-        ->assertJson([
-            'data'=>[
-                'street' => 'test',
-                'city' => 'test',
-                'province' => 'test',
-                'country'=>'test',
-                'postal_code' => '12345'
+            ->assertStatus(201)
+            ->assertJson([
+                'data' => [
+                    'street' => 'test',
+                    'city' => 'test',
+                    'province' => 'test',
+                    'country' => 'test',
+                    'postal_code' => '12345'
+                ]
+            ]);
+    }
+
+    public function testGetAddress()
+    {
+        $this->seed([UserSeeder::class, ContactSeeder::class, AddressSeeder::class]);
+        $address = Address::query()->limit(1)->first();
+
+        $this->get("/api/contacts/{$address->contact_id}/addresses/{$address->id}", [
+            'Authorization' => 'test',
+        ])->assertStatus(200);
+    }
+
+    public function testUpdateAddress()
+    {
+        $this->seed([UserSeeder::class, ContactSeeder::class, AddressSeeder::class]);
+        $address = Address::query()->limit(1)->first();
+
+        $this->put("/api/contacts/{$address->contact_id}/addresses/{$address->id}", [
+            'street' => 'update',
+            'city' => 'update',
+            'province' => 'update',
+            'country' => 'update',
+            'postal_code' => '22222'
+        ], [
+            'Authorization' => 'test'
+        ])
+            ->assertStatus(200)
+            ->assertJson([
+                'data' => [
+                    'street' => 'update',
+                    'city' => 'update',
+                    'province' => 'update',
+                    'country' => 'update',
+                    'postal_code' => '22222'
+                ]
+            ]);
+    }
+
+    public function testGetList()
+    {
+        $this->seed([UserSeeder::class, ContactSeeder::class, AddressSeeder::class]);
+        $contact = Contact::query()->limit(1)->first();
+        $this->get("api/contacts/{$contact->id}/addresses", [
+            'Authorization' => 'test'
+        ])
+            ->assertStatus(200)
+            ->assertJson([
+                'data' => [
+                    [
+                        'street' => 'test',
+                        'city' => 'test',
+                        'province' => 'test',
+                        'country' => 'test',
+                        'postal_code' => '123456789'
+                    ]
+                ]
+            ]);
+    }
+
+    public function testDelete()
+    {
+        $this->seed([UserSeeder::class, ContactSeeder::class, AddressSeeder::class]);
+        $contact = Contact::query()->limit(1)->first();
+        $address = Address::query()->limit(1)->first();
+        $this->delete(
+            "api/contacts/{$contact->id}/addresses/{$address->id}",
+            [],
+            [
+                'Authorization' => 'test'
             ]
+        )->assertStatus(200)
+        ->assertJson([
+            'data'=>true
         ]);
     }
-    
 }

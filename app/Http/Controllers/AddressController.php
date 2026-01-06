@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\AddressCreateRequest;
 use App\Http\Requests\AddressUpdateRequest;
+use App\Http\Resources\AddressCollection;
 use App\Http\Resources\AddressResource;
 use App\Models\Address;
 use App\Models\Contact;
@@ -63,20 +64,51 @@ class AddressController extends Controller
         $user = Auth::user();
         $contact = $this->getContact($user, $idcontact);
         $address = $this->getAddress($contact, $idaddress);
+        if (!$address) {
+            throw new HttpResponseException(response([
+                'errors' => [
+                    'message' => [
+                        'Adrress NOt found'
+                    ]
+                ]
+            ], 404));
+        }
 
         return new AddressResource($address);
     }
 
-    public function update(int $idcontact,int $idaddress,AddressUpdateRequest $request){
+    public function update(int $idcontact, int $idaddress, AddressUpdateRequest $request)
+    {
         $user = Auth::user();
-        $contact = $this->getContact($user,$idcontact);
-        $address = $this->getAddress($contact,$idaddress);
+        $contact = $this->getContact($user, $idcontact);
+        $address = $this->getAddress($contact, $idaddress);
 
         $data = $request->validated();
         $address->fill($data);
         $address->save();
 
         return new AddressResource($address);
+    }
+
+    public function delete(int $idcontact, int $idaddress)
+    {
+        $user = Auth::user();
+        $contact = $this->getContact($user, $idcontact);
+        $address = $this->getAddress($contact, $idaddress);
+
+        $address->delete();
+        return response()->json([
+            'data' => true
+        ], 200);
+    }
+
+    public function list(int $idcontact): AddressCollection
+    {
+        $user = Auth::user();
+        $contact = $this->getContact($user, $idcontact);
+        $address = Address::where('contact_id', $contact->id)->get();
+
+        return new AddressCollection($address);
     }
 
 
